@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  zig:
+    name: Zig 0.16
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: mlugg/setup-zig@v2
+        with:
+          version: 0.16.0
+
+      - name: Check formatting
+        run: zig fmt --check $(git ls-files '*.zig')
+
+      - name: Run tests
+        run: zig build test --summary all
+
+      - name: Build
+        run: zig build --summary all
+
+      - name: Smoke test the CLI
+        run: |
+          zig build run -- --synthetic gradient --width 16 --height 4 --mode density --color none
+          zig build run -- --input testdata/diagonal.ppm --width 1 --height 1 --mode partition --partition quadrant --color none
