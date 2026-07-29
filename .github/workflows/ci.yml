@@ -27,7 +27,9 @@ jobs:
         run: zig fmt --check $(git ls-files '*.zig')
 
       - name: Run tests
-        run: zig build test --summary all
+        # Zig 0.16 can exhaust or crash the compiler when this test graph is
+        # compiled concurrently on the two-core hosted Linux runner.
+        run: zig build test -j1 --summary all
 
       - name: Build
         run: zig build --summary all
