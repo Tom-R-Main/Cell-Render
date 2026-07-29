@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  zig:
+    name: Zig 0.16
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: mlugg/setup-zig@v2
+        with:
+          version: 0.16.0
+
+      - name: Check formatting
+        run: zig fmt --check $(git ls-files '*.zig')
+
+      - name: Run tests
+        # Zig 0.16's x86_64 Linux Debug compiler crashes while compiling the
+        # CLI test root; ReleaseSafe preserves runtime checks and test coverage.
+        run: zig build test -Doptimize=ReleaseSafe -j1 --summary all
+
+      - name: Build
+        run: zig build -Doptimize=ReleaseSafe --summary all
+
+      - name: Smoke test the CLI
+        run: |
+          ./zig-out/bin/cell-render --synthetic gradient --width 16 --height 4 --mode density --color none
+          ./zig-out/bin/cell-render --input testdata/diagonal.ppm --width 1 --height 1 --mode partition --partition quadrant --color none

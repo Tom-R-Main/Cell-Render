@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.2.0 - 2026-07-28
+
 ### Library
 
 - Added a **Mermaid `mindmap`** frontend (`src/diagram/mermaid/mindmap.zig`): an
