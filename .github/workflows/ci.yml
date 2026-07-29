@@ -36,5 +36,5 @@ jobs:
 
       - name: Smoke test the CLI
         run: |
-          zig build run -- --synthetic gradient --width 16 --height 4 --mode density --color none
-          zig build run -- --input testdata/diagonal.ppm --width 1 --height 1 --mode partition --partition quadrant --color none
+          zig build run -Doptimize=ReleaseSafe -- --synthetic gradient --width 16 --height 4 --mode density --color none
+          zig build run -Doptimize=ReleaseSafe -- --input testdata/diagonal.ppm --width 1 --height 1 --mode partition --partition quadrant --color none
