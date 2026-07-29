@@ -32,7 +32,7 @@ jobs:
         run: zig build test -Doptimize=ReleaseSafe -j1 --summary all
 
       - name: Build
-        run: zig build --summary all
+        run: zig build -Doptimize=ReleaseSafe --summary all
 
       - name: Smoke test the CLI
         run: |
