@@ -27,9 +27,9 @@ jobs:
         run: zig fmt --check $(git ls-files '*.zig')
 
       - name: Run tests
-        # Zig 0.16 can exhaust or crash the compiler when this test graph is
-        # compiled concurrently on the two-core hosted Linux runner.
-        run: zig build test -j1 --summary all
+        # Zig 0.16's x86_64 Linux Debug compiler crashes while compiling the
+        # CLI test root; ReleaseSafe preserves runtime checks and test coverage.
+        run: zig build test -Doptimize=ReleaseSafe -j1 --summary all
 
       - name: Build
         run: zig build --summary all
