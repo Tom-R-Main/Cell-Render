@@ -1,15 +1,10 @@
 # Cell Render
 
-Zig-first terminal visual rendering for images, diagrams, and TUI surfaces.
+Render images and Mermaid diagrams in your terminal, or embed the renderer in a Zig terminal app.
 
-Cell Render turns visual inputs into terminal-native cells: raw images, semantic diagrams, and future agent/TUI visualization primitives. The core library accepts caller-owned data and returns `Frame` output or ANSI through caller-supplied writers. Decoding, terminal probing, layout ownership, and app lifecycle stay outside core.
-
-```text
-ImageView / Diagram IR -> cell renderer -> Frame -> ANSI / diff writer / TUI buffer
-```
-
-The durable product is a small, embeddable terminal renderer for TUI apps and agentic planning surfaces, with Siftable as
-the first integration target.
+The CLI reads PPM, PAM, PNG, JPEG, and supported Mermaid diagram types. The library accepts
+caller-owned pixels or diagram data and returns terminal cells or ANSI output. Your app keeps
+control of file decoding, terminal configuration, and its event loop.
 
 ## Demo — Do I look like I know what a JPEG is?
 
@@ -21,9 +16,66 @@ edge-correlation 0.945** against the reference.
 
 GitHub markdown can't display truecolor ANSI, so the right pane is the quality harness' pixel reconstruction of the
 emitted cells (each quadrant cell painted as its exact 2×2 subblock with the solved foreground/background colors), not a
-terminal screenshot. It was generated exactly as:
+terminal screenshot.
+
+## Try it
+
+You need Git and **Zig 0.16.0** from the [Zig downloads](https://ziglang.org/download/) page.
+Check `zig version` before building; this repository and its CI target 0.16.0.
+The first build fetches the pinned `zigimg` dependency and needs network access.
 
 ```sh
+git clone https://github.com/Tom-R-Main/Cell-Render.git
+cd Cell-Render
+zig version
+zig build
+./zig-out/bin/cell-render mermaid testdata/mermaid/flowchart/basic_lr.mmd --ascii --color none
+```
+
+The bundled diagram should render as:
+
+```text
++-------+   +-----+
+| Start |-->| End |
++-------+   +-----+
+```
+
+Now render a bundled image in a terminal that supports truecolor and Unicode block characters:
+
+```sh
+./zig-out/bin/cell-render --input testdata/real/photo-small.jpg --width 60 --height 20 --mode partition --partition quadrant --color truecolor
+```
+
+You should see a small color image made from terminal cells. For a plain-text preview without
+an image file, run:
+
+```sh
+./zig-out/bin/cell-render --synthetic gradient --width 40 --height 12 --mode density --color none
+```
+
+These examples use bundled or generated input; they need no model API, font download, or
+ImageMagick installation. Use `./zig-out/bin/cell-render --help` for image options and
+`./zig-out/bin/cell-render mermaid --help` for diagram options.
+
+## Use it in your app
+
+Choose Cell Render when you want cell output you can embed in a terminal UI, with explicit
+allocation, dimensions, colors, and redraw control. The library supplies frames and writers;
+it does not own your terminal or decode image files. The CLI and tools handle image decoding.
+Mermaid support covers [specific diagram subsets](docs/DIAGRAM_RENDERING.md).
+
+Start with the [core API](#core-api) for a single render, or the
+[TUI integration guide](docs/TUI_INTEGRATION.md) for repeated renders and frame diffing.
+
+<details>
+<summary>Reproduce the JPEG comparison</summary>
+
+This separate quality-harness example requires ImageMagick and a source image named
+`king-of-the-hill.jpeg`, which is not included in the repository.
+
+```sh
+mkdir -p testdata/generated tools/out
+
 # 1. Downscale the source screenshot to a PPM the harness can read (decoder lives outside core):
 magick king-of-the-hill.jpeg -resize 1024x testdata/generated/hank.ppm
 
@@ -41,6 +93,8 @@ magick \( docs/_ref.png -gravity North -background '#1d1f21' -splice 0x28 \
             -fill white -pointsize 18 -annotate +0+4 'quadrant truecolor reconstruction' \) \
        +append -background '#1d1f21' -bordercolor '#1d1f21' -border 8 docs/hank-comparison.png
 ```
+
+</details>
 
 ## Design Commitments
 
